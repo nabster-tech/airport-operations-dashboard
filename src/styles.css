@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+@import './styles/shell.css';
+@import './styles/widgets.css';
+@import './styles/overlays.css';
+@theme {
+  --font-sans: 'Inter Variable', Inter, system-ui, sans-serif;
+  --color-aviation: #55d9bd;
+}
+:root {
+  font-family: var(--font-sans);
+  color: #eaf0f8;
+  background: #0b1019;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: dark;
+  --muted: #98a6bb;
+  --surface: #131c29;
+  --border: #263145;
+  --teal: #55d9bd;
+  --amber: #f5be69;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+button,
+a,
+select {
+  outline-offset: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--teal);
+}
+button {
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+select {
+  width: 100%;
+  border: 1px solid #334158;
+  background: #151e2c;
+  border-radius: 7px;
+  color: #d8e1ee;
+  padding: 9px 10px;
+  font-size: 12px;
+  min-height: 38px;
+}
+option {
+  background: #182232;
+}
+svg {
+  flex-shrink: 0;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 11px;
+}
+.center {
+  text-align: center;
+}
+.text-amber {
+  color: var(--amber);
+}
+.skip-link {
+  position: fixed;
+  left: 20px;
+  top: -60px;
+  z-index: 1000;
+  padding: 12px;
+  background: var(--teal);
+  color: #09251e;
+  border-radius: 6px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    margin-top: 5px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

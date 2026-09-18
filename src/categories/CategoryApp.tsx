@@ -32,6 +32,7 @@ import { CategoryGrid, KpiFocus, restoreKpi } from './CategoryGrid';
 import { exportRows } from './views';
 import { useDesktop } from '../components/useDesktop';
 import './categories.css';
+import { ThemeSelector } from '../theme';
 export default function CategoryApp() {
   const { category, invalid } = useCategoryRoute();
   const definition = categories.find((c) => c.id === category)!;
@@ -252,7 +253,10 @@ export default function CategoryApp() {
               KPI Categories <span>/</span> <strong>{definition.label}</strong>
             </span>
           </div>
-          <span className="category-demo-badge">STATIC DEMO</span>
+          <div className="topbar-right">
+            <span className="category-demo-badge">STATIC DEMO</span>
+            <ThemeSelector />
+          </div>
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="page-heading">

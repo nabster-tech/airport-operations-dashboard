@@ -22,6 +22,8 @@ The production build is emitted to `dist/`. Runtime data, fonts, and icons are b
 
 ## What works
 
+- Light, Dark, and System appearance options in the top bar. Preferences persist across visits and synchronize between tabs; System follows OS appearance changes.
+
 - All 71 KPIs from the supplied requirements, grouped into Airside Operations, Turnaround Management, Runway Operations, Apron Operations, Airside Safety, Ground Support / Resources, Weather / LVP, Operational Efficiency, Reporting & Analytics, Terminal Operations, and Passenger Flow.
 - Category routes that survive reload and browser history, plus global KPI search that opens any metric in its category.
 - Category-specific time, terminal, movement, carrier, runway, resource, and granularity filters.

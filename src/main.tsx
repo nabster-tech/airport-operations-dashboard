@@ -7,6 +7,8 @@ import '@fontsource-variable/inter';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import './styles.css';
+import './styles/themes.css';
+import { initializeTheme } from './theme';
 class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -28,6 +30,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: bool
   }
 }
 const queryClient = new QueryClient();
+initializeTheme();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppErrorBoundary>

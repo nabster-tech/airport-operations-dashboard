@@ -141,10 +141,10 @@ export function MetricChart({
     );
   const data = grouped(metric, filters.granularity, by);
   const tooltip = {
-    background: '#172334',
-    border: '1px solid #43546a',
+    background: 'var(--tooltip-bg)',
+    border: '1px solid var(--tooltip-border)',
     borderRadius: 8,
-    color: '#f1f5f9',
+    color: 'var(--tooltip-text)',
   };
   if (metric.id === 'ap-stand-utilization' || metric.id === 'ap-taxiway-congestion') {
     const groups = grouped(metric, filters.granularity, 'group');
@@ -185,33 +185,50 @@ export function MetricChart({
       <ResponsiveContainer width="100%" height="100%" debounce={30} minHeight={60}>
         {by === 'group' ? (
           <BarChart data={data.slice(0, 20)} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid stroke="#2b3748" vertical={false} />
+            <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: '#abbacf', fontSize: 9 }}
+              tick={{ fill: 'var(--chart-text)', fontSize: 9 }}
               interval="preserveStartEnd"
             />
-            <YAxis tick={{ fill: '#abbacf', fontSize: 10 }} />
-            <Tooltip contentStyle={tooltip} />
-            <Bar dataKey="value" name={metric.spec.unit} fill="#55d9bd" isAnimationActive={false} />
+            <YAxis tick={{ fill: 'var(--chart-text)', fontSize: 10 }} />
+            <Tooltip
+              contentStyle={tooltip}
+              itemStyle={{ color: 'var(--tooltip-text)' }}
+              cursor={{ stroke: 'var(--chart-grid)', fill: 'var(--chart-area)' }}
+            />
+            <Bar
+              dataKey="value"
+              name={metric.spec.unit}
+              fill="var(--chart-primary)"
+              isAnimationActive={false}
+            />
           </BarChart>
         ) : metric.spec.pairLabel ? (
           <ComposedChart data={data} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
-            <CartesianGrid stroke="#2b3748" vertical={false} />
-            <XAxis dataKey="label" minTickGap={30} tick={{ fill: '#abbacf', fontSize: 10 }} />
-            <YAxis tick={{ fill: '#abbacf', fontSize: 10 }} />
-            <Tooltip contentStyle={tooltip} />
+            <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
+            <XAxis
+              dataKey="label"
+              minTickGap={30}
+              tick={{ fill: 'var(--chart-text)', fontSize: 10 }}
+            />
+            <YAxis tick={{ fill: 'var(--chart-text)', fontSize: 10 }} />
+            <Tooltip
+              contentStyle={tooltip}
+              itemStyle={{ color: 'var(--tooltip-text)' }}
+              cursor={{ stroke: 'var(--chart-grid)', fill: 'var(--chart-area)' }}
+            />
             <Area
               dataKey="value"
               name="Measured"
-              fill="#55d9bd22"
-              stroke="#55d9bd"
+              fill="var(--chart-area)"
+              stroke="var(--chart-primary)"
               isAnimationActive={false}
             />
             <Line
               dataKey="reference"
               name={metric.spec.pairLabel}
-              stroke="#a3baff"
+              stroke="var(--chart-secondary)"
               dot={false}
               isAnimationActive={false}
             />
@@ -220,18 +237,26 @@ export function MetricChart({
           <AreaChart data={data} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
             <defs>
               <linearGradient id={uid} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#55d9bd" stopOpacity={0.25} />
-                <stop offset="1" stopColor="#55d9bd" stopOpacity={0.01} />
+                <stop offset="0" stopColor="var(--chart-primary)" stopOpacity={0.25} />
+                <stop offset="1" stopColor="var(--chart-primary)" stopOpacity={0.01} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#2b3748" vertical={false} strokeDasharray="3 5" />
-            <XAxis dataKey="label" minTickGap={30} tick={{ fill: '#abbacf', fontSize: 10 }} />
-            <YAxis tick={{ fill: '#abbacf', fontSize: 10 }} />
-            <Tooltip contentStyle={tooltip} />
+            <CartesianGrid stroke="var(--chart-grid)" vertical={false} strokeDasharray="3 5" />
+            <XAxis
+              dataKey="label"
+              minTickGap={30}
+              tick={{ fill: 'var(--chart-text)', fontSize: 10 }}
+            />
+            <YAxis tick={{ fill: 'var(--chart-text)', fontSize: 10 }} />
+            <Tooltip
+              contentStyle={tooltip}
+              itemStyle={{ color: 'var(--tooltip-text)' }}
+              cursor={{ stroke: 'var(--chart-grid)', fill: 'var(--chart-area)' }}
+            />
             <Area
               dataKey="value"
               name={metric.spec.unit}
-              stroke="#55d9bd"
+              stroke="var(--chart-primary)"
               fill={'url(#' + uid + ')'}
               isAnimationActive={false}
             />

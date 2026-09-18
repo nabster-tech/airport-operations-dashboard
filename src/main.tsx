@@ -9,6 +9,7 @@ import 'react-resizable/css/styles.css';
 import './styles.css';
 import './styles/themes.css';
 import { initializeTheme } from './theme';
+import { PresentationProvider } from './presentation';
 class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -33,10 +34,12 @@ const queryClient = new QueryClient();
 initializeTheme();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </AppErrorBoundary>
+    <PresentationProvider>
+      <AppErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </AppErrorBoundary>
+    </PresentationProvider>
   </StrictMode>,
 );

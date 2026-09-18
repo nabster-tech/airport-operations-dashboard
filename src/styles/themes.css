@@ -255,3 +255,40 @@
     padding: 8px 4px;
   }
 }
+
+.presentation-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.currency-control select {
+  width: 90px;
+  font-size: 11px;
+}
+.timezone-button {
+  padding: 8px 10px;
+  min-height: 34px;
+  font-size: 10px;
+}
+[data-theme='light'] .timezone-button[aria-pressed='true'] {
+  background: #e1f4ee;
+  border-color: #a1cec0;
+  color: #096a59;
+}
+@media (max-width: 700px) {
+  .presentation-controls {
+    gap: 4px;
+  }
+  .currency-control select {
+    width: 76px;
+    padding: 8px 4px;
+  }
+  .timezone-button {
+    padding: 7px 5px;
+    font-size: 9px;
+    gap: 4px;
+  }
+  .category-app .topbar-right {
+    gap: 5px;
+  }
+}

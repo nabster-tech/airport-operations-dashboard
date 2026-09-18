@@ -33,8 +33,10 @@ import { exportRows } from './views';
 import { useDesktop } from '../components/useDesktop';
 import './categories.css';
 import { ThemeSelector } from '../theme';
+import { PresentationControls, usePresentation } from '../presentation';
 export default function CategoryApp() {
   const { category, invalid } = useCategoryRoute();
+  const presentation = usePresentation();
   const definition = categories.find((c) => c.id === category)!;
   const [range, setRange] = useState<CategoryFilters['range']>('today');
   const [filterMap, setFilterMap] = useState<Partial<Record<CategoryId, CategoryFilters>>>({});
@@ -172,7 +174,7 @@ export default function CategoryApp() {
         <Activity size={15} />
         <div>
           <strong>Static demo data</strong>
-          <span>17 Sep 2026 · 14:00 IST</span>
+          <span>{presentation.snapshotLabel()}</span>
         </div>
       </div>
     </>
@@ -198,8 +200,8 @@ export default function CategoryApp() {
         definition.label,
         m.id,
         catalog[m.id].title,
-        m.value ?? '',
-        m.spec.unit,
+        presentation.convertValue(m.value, m.spec.unit) ?? '',
+        presentation.displayUnit(m.spec.unit),
         m.numerator,
         m.denominator,
         m.scope,
@@ -255,6 +257,7 @@ export default function CategoryApp() {
           </div>
           <div className="topbar-right">
             <span className="category-demo-badge">STATIC DEMO</span>
+            <PresentationControls />
             <ThemeSelector />
           </div>
         </header>
@@ -438,7 +441,7 @@ export default function CategoryApp() {
             <span>
               <Check size={12} /> {members.length} defined KPIs · {definition.label}
             </span>
-            <span>Static snapshot · 17 Sep 2026 · 14:00 IST</span>
+            <span>Static snapshot · {presentation.snapshotLabel()}</span>
           </footer>
         </main>
       </div>

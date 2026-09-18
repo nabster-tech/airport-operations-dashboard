@@ -32,3 +32,6 @@ Radix dialogs and menus provide focus and keyboard behavior. Mobile navigation t
 6. Complete staging, security, accessibility, browser, disaster-recovery, and operational-acceptance gates before production release.
 
 The PoC implements the complete static user experience and replaceable application contracts. It does not claim live integration or operational certification.
+
+Currency display preferences support EUR, USD, and INR from an INR reference using fixed illustrative PoC rates (1 INR = 0.011 EUR, 0.012 USD). They are applied only to metrics whose declared unit is a currency. The current 71-entry operations catalog contains no monetary KPI, so no operational values are scaled. Production must source approved FX rates and expose their effective timestamp before enabling monetary conversions.
+Airport timeline labels use Asia/Kolkata local time. The optional UTC view shows the paired UTC time on chart axes, detail rows, and snapshot labels; airport and UTC preferences are saved in browser-local presentation settings.

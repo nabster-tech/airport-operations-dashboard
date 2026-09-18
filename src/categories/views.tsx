@@ -14,14 +14,29 @@ import {
 } from 'recharts';
 import { grouped } from './source';
 import { catalog } from './catalog';
-import { timeLabel, type CategoryFilters, type KpiResult } from './models';
-export const format = (n: number | null) =>
-  n === null ? '—' : new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(n);
+import type { CategoryFilters, KpiResult } from './models';
+import { usePresentation } from '../presentation';
+export const format = (n: number | null | undefined) =>
+  n == null ? '—' : new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 }).format(n);
+export function formatMetricValue(
+  metric: KpiResult,
+  value: number | null | undefined,
+  presentation: ReturnType<typeof usePresentation>,
+) {
+  return ['INR', 'EUR', 'USD'].includes(metric.spec.unit)
+    ? value == null
+      ? '—'
+      : presentation.moneyLabel(presentation.convertValue(value, metric.spec.unit) ?? 0)
+    : format(value);
+}
 export function MetricValue({ metric }: { metric: KpiResult }) {
+  const presentation = usePresentation();
   return (
     <>
-      <span className="metric-number">{format(metric.value)}</span>
-      <span className="metric-unit">{metric.spec.unit}</span>
+      <span className="metric-number">{formatMetricValue(metric, metric.value, presentation)}</span>
+      {!['INR', 'EUR', 'USD'].includes(metric.spec.unit) && (
+        <span className="metric-unit">{presentation.displayUnit(metric.spec.unit)}</span>
+      )}
     </>
   );
 }
@@ -70,6 +85,7 @@ export function detailRows(
   metric: KpiResult,
   filters: CategoryFilters,
   breakdown: 'time' | 'group' | 'records',
+  presentation: ReturnType<typeof usePresentation>,
 ) {
   if (breakdown === 'records')
     return {
@@ -86,20 +102,28 @@ export function detailRows(
         (r) =>
           [
             r.id,
-            timeLabel(r.minute),
+            presentation.timeLabel(r.minute),
             r.label,
-            r.numerator,
-            r.denominator,
-            r.reference ?? 'Unavailable',
+            presentation.convertValue(r.numerator, metric.spec.unit) ?? r.numerator,
+            presentation.convertValue(r.denominator, metric.spec.unit) ?? r.denominator,
+            presentation.convertValue(r.reference, metric.spec.unit) ?? 'Unavailable',
             r.note ?? '',
           ] as (string | number)[],
       ),
     };
-  const groups = grouped(metric, filters.granularity, breakdown);
+  const groups = grouped(metric, filters.granularity, breakdown).map((point) => ({
+    ...point,
+    label:
+      breakdown === 'time' && /^\d{2}:\d{2}$/.test(point.label)
+        ? presentation.timeLabel(
+            Number(point.label.slice(0, 2)) * 60 + Number(point.label.slice(3, 5)),
+          )
+        : point.label,
+  }));
   return {
     columns: [
       breakdown === 'time' ? 'Airport interval' : 'Group',
-      'Value (' + metric.spec.unit + ')',
+      'Value (' + presentation.displayUnit(metric.spec.unit) + ')',
       'Numerator',
       'Denominator',
       ...(metric.spec.pairLabel ? [metric.spec.pairLabel] : []),
@@ -108,10 +132,12 @@ export function detailRows(
       (r) =>
         [
           r.label,
-          r.value ?? 'Unavailable',
-          r.numerator,
-          r.denominator,
-          ...(metric.spec.pairLabel ? [r.reference ?? 'Unavailable'] : []),
+          presentation.convertValue(r.value, metric.spec.unit) ?? 'Unavailable',
+          presentation.convertValue(r.numerator, metric.spec.unit) ?? r.numerator,
+          presentation.convertValue(r.denominator, metric.spec.unit) ?? r.denominator,
+          ...(metric.spec.pairLabel
+            ? [presentation.convertValue(r.reference, metric.spec.unit) ?? 'Unavailable']
+            : []),
         ] as (string | number)[],
     ),
   };
@@ -126,6 +152,7 @@ export function MetricChart({
   by?: 'time' | 'group';
 }) {
   const uid = useId().replaceAll(':', '');
+  const presentation = usePresentation();
   if (metric.state !== 'ready')
     return (
       <div className="empty-metric">
@@ -139,7 +166,17 @@ export function MetricChart({
         </span>
       </div>
     );
-  const data = grouped(metric, filters.granularity, by);
+  const data = grouped(metric, filters.granularity, by).map((point) => ({
+    ...point,
+    label:
+      by === 'time' && /^\d{2}:\d{2}$/.test(point.label)
+        ? presentation.timeLabel(
+            Number(point.label.slice(0, 2)) * 60 + Number(point.label.slice(3, 5)),
+          )
+        : point.label,
+    value: presentation.convertValue(point.value, metric.spec.unit),
+    reference: presentation.convertValue(point.reference, metric.spec.unit),
+  }));
   const tooltip = {
     background: 'var(--tooltip-bg)',
     border: '1px solid var(--tooltip-border)',
@@ -147,15 +184,23 @@ export function MetricChart({
     color: 'var(--tooltip-text)',
   };
   if (metric.id === 'ap-stand-utilization' || metric.id === 'ap-taxiway-congestion') {
-    const groups = grouped(metric, filters.granularity, 'group');
+    const groups = grouped(metric, filters.granularity, 'group').map((point) => ({
+      ...point,
+      value: presentation.convertValue(point.value, metric.spec.unit),
+    }));
     return (
       <div className="category-matrix">
         {groups.map((r) => (
-          <div key={r.label} title={r.label + ': ' + format(r.value) + ' ' + metric.spec.unit}>
+          <div
+            key={r.label}
+            title={
+              r.label + ': ' + format(r.value) + ' ' + presentation.displayUnit(metric.spec.unit)
+            }
+          >
             <span>{r.label}</span>
             <strong>
               {format(r.value)}
-              <small>{metric.spec.unit}</small>
+              <small>{presentation.displayUnit(metric.spec.unit)}</small>
             </strong>
           </div>
         ))}
@@ -168,13 +213,20 @@ export function MetricChart({
       <MetricTable
         label={catalog[metric.id].title + ' events'}
         columns={['Time', 'Event / location', 'Notes']}
-        rows={events.map((r) => [timeLabel(r.minute), r.label, r.note ?? 'Recorded event'])}
+        rows={events.map((r) => [
+          presentation.timeLabel(r.minute),
+          r.label,
+          r.note ?? 'Recorded event',
+        ])}
       />
     );
   }
   if (metric.spec.kind === 'report')
     return (
-      <MetricTable label="Resource utilization report" {...detailRows(metric, filters, 'time')} />
+      <MetricTable
+        label="Resource utilization report"
+        {...detailRows(metric, filters, 'time', presentation)}
+      />
     );
   return (
     <div
@@ -199,7 +251,7 @@ export function MetricChart({
             />
             <Bar
               dataKey="value"
-              name={metric.spec.unit}
+              name={presentation.displayUnit(metric.spec.unit)}
               fill="var(--chart-primary)"
               isAnimationActive={false}
             />
@@ -255,7 +307,7 @@ export function MetricChart({
             />
             <Area
               dataKey="value"
-              name={metric.spec.unit}
+              name={presentation.displayUnit(metric.spec.unit)}
               stroke="var(--chart-primary)"
               fill={'url(#' + uid + ')'}
               isAnimationActive={false}

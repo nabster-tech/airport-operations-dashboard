@@ -5,7 +5,15 @@ import GridLayout, { useContainerWidth, verticalCompactor } from 'react-grid-lay
 import { GripVertical, Maximize2, MoreHorizontal, X, Download, MapPin } from 'lucide-react';
 import { catalog, type CategoryId, type KpiId } from './catalog';
 import { cols, pack, useCategoryWorkspace, type Position, type Breakpoint } from './workspace';
-import { detailRows, exportRows, MetricChart, MetricTable, MetricValue, format } from './views';
+import {
+  detailRows,
+  exportRows,
+  MetricChart,
+  MetricTable,
+  MetricValue,
+  formatMetricValue,
+} from './views';
+import { usePresentation } from '../presentation';
 import type { CategoryFilters, CategorySnapshot, KpiResult } from './models';
 export function CategoryGrid({
   snapshot,
@@ -16,6 +24,7 @@ export function CategoryGrid({
   filters: CategoryFilters;
   onFocus: (id: KpiId, trigger: HTMLElement) => void;
 }) {
+  const presentation = usePresentation();
   const { width, containerRef, mounted } = useContainerWidth();
   const category = snapshot.category;
   const state = useCategoryWorkspace(),
@@ -245,15 +254,23 @@ export function CategoryGrid({
                       </p>
                       <div className="metric-comparison">
                         {metric.spec.pairLabel
-                          ? metric.spec.pairLabel + ': ' + format(metric.reference)
+                          ? metric.spec.pairLabel +
+                            ': ' +
+                            formatMetricValue(metric, metric.reference, presentation)
                           : metric.spec.target !== undefined
-                            ? 'Demo target ' + metric.spec.target + metric.spec.unit
+                            ? 'Demo target ' +
+                              (['INR', 'EUR', 'USD'].includes(metric.spec.unit)
+                                ? formatMetricValue(metric, metric.spec.target, presentation)
+                                : metric.spec.target + ' ' + metric.spec.unit)
                             : 'Static demonstration · provisional definition'}
                       </div>
                     </div>
                     <div className="card-chart">
                       {doc.tables.includes(metric.id) ? (
-                        <MetricTable label={entry.title} {...detailRows(metric, filters, 'time')} />
+                        <MetricTable
+                          label={entry.title}
+                          {...detailRows(metric, filters, 'time', presentation)}
+                        />
                       ) : (
                         <MetricChart metric={metric} filters={filters} />
                       )}
@@ -283,10 +300,11 @@ export function KpiFocus({
   trigger: HTMLElement | null;
   onClose: () => void;
 }) {
+  const presentation = usePresentation();
   const [by, setBy] = useState<'time' | 'group' | 'records'>('time');
   const [tableOnly, setTableOnly] = useState(false);
   const entry = catalog[metric.id],
-    table = detailRows(metric, filters, by);
+    table = detailRows(metric, filters, by, presentation);
   return (
     <Dialog.Root
       open
@@ -328,7 +346,8 @@ export function KpiFocus({
               <p className="muted">{metric.scope}</p>
               {metric.spec.pairLabel && (
                 <p>
-                  {metric.spec.pairLabel}: {format(metric.reference)}
+                  {metric.spec.pairLabel}:{' '}
+                  {formatMetricValue(metric, metric.reference, presentation)}
                 </p>
               )}
             </div>
@@ -393,7 +412,7 @@ export function KpiFocus({
           <footer className="focus-footer">
             <span>{metric.spec.source}</span>
             <span>Definition v2 · provisional demo assumptions</span>
-            <span>17 Sep 2026 · 14:00 IST</span>
+            <span>{presentation.snapshotLabel()}</span>
           </footer>
         </Dialog.Content>
       </Dialog.Portal>

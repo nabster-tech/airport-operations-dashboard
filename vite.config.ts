@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
-  base: '/airport-operations-dashboard/',
+  base: process.env.GITHUB_ACTIONS ? '/airport-operations-dashboard/' : '/',
   plugins: [react(), tailwindcss()],
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },
   build: {

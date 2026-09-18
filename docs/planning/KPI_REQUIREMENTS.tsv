@@ -1,0 +1,72 @@
+KPI Category	KPI
+Airside Operations	On-Time Performance (OTP) – All Flights
+Airside Operations	OTP – Base/Hub Carrier Flights
+Airside Operations	SOBT Adherence
+Airside Operations	SIBT Adherence
+Airside Operations	AOBT Deviation
+Airside Operations	AIBT Deviation
+Airside Operations	Base Flight Delay >60 min
+Airside Operations	Average Departure Delay
+Airside Operations	Average Arrival Delay
+Turnaround Management	Aircraft Turnaround Time
+Turnaround Management	Turnaround Milestone Adherence
+Turnaround Management	Aircraft Turnaround Delay
+Turnaround Management	TOBT Adherence
+Turnaround Management	TSAT Adherence
+Turnaround Management	Ground Time Utilization
+Runway Operations	Runway Utilization
+Runway Operations	Runway Occupancy Time
+Runway Operations	Runway Incursion Events
+Runway Operations	Runway Configuration Utilization
+Runway Operations	Runway Capacity Utilization
+Runway Operations	Arrival/Departure Throughput
+Apron Operations	Apron Occupancy Rate
+Apron Operations	Apron Congestion Index
+Apron Operations	Stand Utilization
+Apron Operations	Stand Allocation Conflicts
+Apron Operations	VDGS Compliance
+Apron Operations	Aircraft Taxi Time
+Apron Operations	Taxi-Time Deviation
+Apron Operations	Taxiway Congestion
+Apron Operations	Aircraft Taxiing Proximity Events
+Airside Safety	Runway Incursion Rate
+Airside Safety	Aircraft–Vehicle Conflict Events
+Airside Safety	Aircraft–Aircraft Proximity Events
+Airside Safety	Aircraft–Structure/Obstacle Events
+Airside Safety	FOD Detection/Response Time
+Airside Safety	Wildlife Strike/Event Rate
+Airside Safety	Follow-Me Vehicle Availability
+Airside Safety	Follow-Me Response Time
+Ground Support / Resources	GPU Utilization
+Ground Support / Resources	APU Usage vs. GPU Availability
+Ground Support / Resources	PBB Utilization
+Ground Support / Resources	PBB Idle Time
+Ground Support / Resources	Airside Resource Utilization
+Ground Support / Resources	Resource Allocation Success Rate
+Weather / LVP	LVP Activation Compliance
+Weather / LVP	LVP Activation/Deactivation Timeliness
+Weather / LVP	RVR Availability
+Weather / LVP	METAR Availability Rate
+Weather / LVP	METAR Issuance Timeliness
+Weather / LVP	Weather-Related Delay %
+Weather / LVP	Weather Disruption Duration
+Operational Efficiency	Airside Capacity Utilization
+Operational Efficiency	Aircraft Stand Turnaround Efficiency
+Operational Efficiency	Taxi Efficiency
+Operational Efficiency	Gate/Stand Reallocation Rate
+Operational Efficiency	Operational Disruption Recovery Time
+Reporting & Analytics	Granularity Reports – Resource Utilization
+Reporting & Analytics	Data-Feed Failure Rate
+Reporting & Analytics	Emergency Drill Completion Rate
+Terminal Operations	First Bag & Last Bag Delivery Time
+Terminal Operations	CUTE (Airline Check-in Counter) Utilization
+Terminal Operations	Baggage Reconciliation Accuracy
+Terminal Operations	Runway Utilization Report Accuracy
+Terminal Operations	Predictive Passenger Flow & Dynamic Resource Allocation
+Passenger Flow	Passenger Throughput vs. Terminal Capacity
+Passenger Flow	Processing Time - Boarding Gate
+Passenger Flow	Processing Time - Immigration
+Passenger Flow	Check-in Queue Wait Time
+Passenger Flow	Security Queue Wait Time
+Passenger Flow	Immigration Queue Wait Time
+Passenger Flow	Passenger Satisfaction Index

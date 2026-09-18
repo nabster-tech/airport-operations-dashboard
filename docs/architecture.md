@@ -1,35 +1,34 @@
 # Implementation decisions
 
-## Data and state ownership
+## Catalog and navigation
 
-A single static adapter supplies the snapshot and focused detail queries. TanStack Query caches these asynchronous reads with retries, background refetch, and polling disabled. The adapter accepts an AbortSignal and can be replaced with an HTTP implementation without changing card renderers. Filters are validated at the adapter boundary. A production HTTP adapter must additionally validate its external response payloads.
+The catalog is the application's source of truth for 71 stable KPI IDs, exact requirement names, descriptions, categories, supported filters, units, and view families. Categories own their routes, layouts, filters, exports, and loading state. Hash routes keep the static build deployable without server rewrite rules while still supporting reload and browser history.
 
-Zustand owns saved preferences and the current edit draft. Telemetry is not persisted. Widget IDs and payloads are linked by a TypeScript map. Cards render a discriminated visualization payload and never import raw fixtures.
+Global search uses the same catalog and opens a KPI in the correct category. Unknown category routes recover to Airside Operations instead of leaving an empty workspace.
 
-## Metrics
+## Data and calculation boundary
 
-Time windows are resolved against the fixture timestamp, with Today starting at airport-local midnight. Flow measures aggregate their window; occupancy and availability use the endpoint snapshot. Means use sample weights. Rates are recomputed from counts. Unknown and zero values remain distinct.
+Static fixture families model related flights, resources, stands, safety events, weather observations, passenger flows, and operational exercises. A category source resolves filters, calculates observations, and creates chart, matrix, event, report, or scenario view models. Requests accept an `AbortSignal`, and TanStack Query keys include category, filter, and definition version.
 
-Arrival/departure directions are separate from flight status. OTP excludes cancelled, pending and missing-actual movements. Baggage delivery measures first-to-last bag, not arrival-to-first bag. Runway occupancy merges overlapping intervals before dividing by available runway time. Mishandling is explicitly a reporting-window proxy.
+Each KPI specification carries a provisional formula, source, target, caveat, and version. Rates derive from numerator and denominator records, weighted measures retain their sample count, and unavailable values remain distinct from zero. The UI exposes these details in every focus dialog.
 
-The p95 detail is labeled **highest interval p95** because sample-level observations are not provided; it is not an aggregate percentile. All definitions, units, target assumptions and sources are visible in focus dialogs.
+The source contract can be implemented by an HTTP adapter without changing category cards. Production responses must be schema-validated and reconciled against source-system totals before release.
 
 ## Interaction and layout
 
-React Grid Layout 2 handles pointers, compaction and resize constraints. A measured container determines desktop/tablet/mobile layouts. Each breakpoint has independent saved coordinates. Every card has a readable minimum size. Mobile uses one column and menu-based move/size actions.
+React Grid Layout handles pointer movement, compaction, and resizing. Cards expose east, south, and southeast resize cursors as well as menu actions for standard width, full width, order, and height. A measured container selects responsive desktop, tablet, and mobile layouts; charts fill bounded content regions using `ResponsiveContainer`.
 
-Save validates and writes a draft atomically to localStorage. Cancel restores the prior document. Unknown stored IDs are removed, missing registry widgets are appended, v0 is migrated, and invalid documents recover to defaults with a message. Storage failure leaves the draft available and never reports a successful save.
+Each category has an independent draft and saved layout. Save validates and atomically writes the versioned document to localStorage. Cancel restores the saved document. Invalid storage recovers to defaults with a visible message. A conservative migration maps only the compatible OTP, turnaround, runway, and security-wait preferences from the original dashboard format.
 
-Radix dialogs and menus provide focus behavior. The mobile sidebar prevents focus from reaching hidden/background content and supports Escape and a Tab loop. Chart values are available in actual HTML tables. Color always has a label or count alongside it.
-
-Recharts ResponsiveContainer is the chart's only size observer. Parent content areas have bounded height and shrinkable flex dimensions. Series animations are disabled during normal chart rendering to keep resizing and frequent focus changes predictable.
+Radix dialogs and menus provide focus and keyboard behavior. Mobile navigation traps focus correctly. Every chart has an actual HTML detail table, and status is communicated with text as well as color.
 
 ## Production evolution
 
-1. Replace the static adapter with read-only aggregated source APIs. Reconcile identifiers, timezones, formula versions, late events and source totals with operations owners.
-2. Add organization SSO and server-enforced role/airport permissions. Keep revenue access separately controllable. Move preferences to a revision-aware user API.
-3. Define expected freshness for each source; provide source timestamps, partial failure, last-known values, retry and recovery. Use polling first when adequate; add SSE only when justified.
-4. For streaming, define cursors, event IDs, gap detection, replay, reconnect and snapshot resynchronization. Add a live-update soak test.
-5. Agree load, retention, recovery and service objectives before selecting specialized data infrastructure. Add monitoring, source-health alerts, staging, rollback, backup restoration and operational ownership.
+1. Approve KPI definitions, owners, dimensions, thresholds, time zones, and late-event rules with airport operations teams.
+2. Implement read-only aggregate APIs behind the category-source interface, including timestamps, lineage, partial errors, and reconciliation fields.
+3. Add organization SSO and server-enforced airport, role, and revenue permissions. Move preferences to a revision-aware user API.
+4. Define freshness and service objectives for each source. Add last-known values, retry and recovery behavior, source-health monitoring, and operational alert ownership.
+5. Validate performance against representative history and concurrency. Introduce polling first; use streaming only where the agreed latency requires it, with cursor replay and gap recovery.
+6. Complete staging, security, accessibility, browser, disaster-recovery, and operational-acceptance gates before production release.
 
-This PoC implements the UI and static data contracts. It does not claim production source integration or operational certification.
+The PoC implements the complete static user experience and replaceable application contracts. It does not claim live integration or operational certification.

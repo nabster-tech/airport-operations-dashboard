@@ -1,6 +1,6 @@
 # Airside · Airport operations
 
-A complete React/TypeScript proof of concept for an airport duty manager's workspace. All 13 KPIs use a coherent **static demo dataset**, fixed to **17 September 2026, 14:00 IST**. Time filters are anchored to that snapshot, so the demonstration works on any date.
+A React and TypeScript proof of concept for an airport operations analytics workspace. It implements all **71 requested KPIs** across **11 operational categories** using a coherent static dataset fixed to **17 September 2026, 14:00 IST**. The data boundary is asynchronous and replaceable, so production APIs can be introduced without rewriting the category views.
 
 ## Run locally
 
@@ -11,60 +11,60 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite (normally http://127.0.0.1:5173).
+Open the URL printed by Vite, normally <http://127.0.0.1:5173>.
 
 ```sh
 npm run build
 npm run preview
 ```
 
-The production build is in `dist/`. Serve it over HTTP using any static host. Runtime data, fonts, and icons are bundled; the app does not need an external API. A first installation needs npm access.
+The production build is emitted to `dist/`. Runtime data, fonts, and icons are bundled; only the initial dependency installation needs network access.
 
 ## What works
 
-- Passenger throughput, security waits, check-in density, baggage delivery, OTP, flight status, runway utilization, turnaround time, baggage mishandling, cargo throughput, parking, concession revenue, and gate availability.
-- Terminal, movement, and time-window filters, with explicit labels for airport-wide measures and incompatible selections.
-- Edit mode: pointer drag/resize, keyboard-accessible move and size actions, Save/Cancel/Reset, Hide/Undo/Restore.
-- Versioned browser-local preferences, corrupt-storage recovery, and truthful save failure messages.
-- Focus dialogs with expanded charts, definitions, source labels, detail tables, and applicable breakdowns.
-- Chart/table and density preferences; responsive desktop/tablet/mobile layouts; mobile navigation keyboard support.
-- A selectable gate matrix and CSV export of the filtered snapshot.
+- All 71 KPIs from the supplied requirements, grouped into Airside Operations, Turnaround Management, Runway Operations, Apron Operations, Airside Safety, Ground Support / Resources, Weather / LVP, Operational Efficiency, Reporting & Analytics, Terminal Operations, and Passenger Flow.
+- Category routes that survive reload and browser history, plus global KPI search that opens any metric in its category.
+- Category-specific time, terminal, movement, carrier, runway, resource, and granularity filters.
+- Drag-to-rearrange layout editing with edge and corner resize cursors, keyboard move/size actions, full-width sizing, Save/Cancel/Reset, and Hide/Undo/Restore.
+- Independent, versioned layouts and filter memory for every category, including compatible migration from the original four KPI preferences.
+- Focus dialogs for every KPI with calculation, source, target, caveat, trend or event detail, and an accessible HTML data table.
+- CSV export for a category or focused KPI, responsive mobile navigation, and explicit zero/unavailable states.
+- A precomputed passenger-flow scenario that is clearly presented as read-only demonstration output.
 
-On phones, use card menus to reorder cards and choose their height. Desktop coordinates remain independent. “Today” refers to the fixture date; there is no live-update indicator or background telemetry timer.
+The PoC intentionally uses static data and provisional KPI definitions. The source timestamp and demo status remain visible in the interface. The exact requirements archive and delivery plan are in [`docs/planning`](docs/planning).
 
 ## Five-minute demonstration
 
-1. Open Overview and identify the Terminal 2 congestion notice.
-2. Select **View details** to inspect T2 departure security; compare checkpoints and switch to the Terminal breakdown.
-3. Close focus, then reset filters. Open **Edit layout**, drag a card, resize a corner, and use a card menu to move it with the keyboard.
-4. Hide/undo/restore a card, save, and refresh. Open a card's data-table display.
-5. Try Last hour and a terminal filter, inspect the runway's airport-wide label, then resize to a phone viewport.
+1. Move between KPI categories in the sidebar and use browser Back/Forward to show route persistence.
+2. Search for a KPI such as **Security Queue Wait Time**, open it, and inspect its definition, source, and detail table.
+3. Open **Edit layout**, drag a card, resize it from an edge or corner, set another card to full width, and save.
+4. Reload to show the saved category layout, then switch categories to show independent layouts.
+5. Apply category filters, export CSV, and open **Passenger Flow** to inspect the precomputed desk-allocation scenario.
 
 ## Verify
 
 ```sh
-npm run typecheck
-npm run lint
-npm test
+npm run check
 npx playwright install chromium
 npm run test:e2e
 npm run format:check
 ```
 
-Browser tests start a production build and preview server on port 4173. Screenshots are generated under `screenshots/`; failure traces are under `test-results/`. See [verification notes](docs/verification.md).
+Browser tests start a production preview on port 4173. Screenshots are generated under `screenshots/`; failure traces are written to `test-results/`. See the [verification record](docs/verification.md).
 
 ## Structure and production boundary
 
-- `src/types.ts`: typed KPI payload map, filters, fixture and layout contracts.
-- `src/mockData.ts`: deterministic fixture recipe, independent of wall-clock time.
-- `src/data/TelemetrySource.ts`: cancellable async snapshot/detail interface.
-- `src/data/StaticTelemetrySource.ts`: the implemented static adapter.
-- `src/data/selectors.ts`: tested formulas, filtering, timezone and occupancy calculations.
-- `src/widgetRegistry.ts`: widget definitions, sizing and display metadata.
-- `src/layout/`: schema validation, browser storage, draft editing, responsive positions.
-- `src/components/`: KPICard, DashboardGrid, FocusDialog, chart and table renderers.
-- `src/App.tsx`: sidebar, filters, actions and the application shell.
+- `src/categories/catalog.ts`: the typed 71-KPI catalog and category metadata.
+- `src/categories/models.ts`: filters, metric specifications, observations, queries, and view models.
+- `src/categories/fixtures.ts`: deterministic, related airport records used by the PoC.
+- `src/categories/source.ts`: cancellable query adapter and versioned KPI calculations.
+- `src/categories/workspace.ts`: category layout, filter persistence, validation, and migration.
+- `src/categories/views.tsx`: shared visualization and focus-detail families.
+- `src/categories/CategoryGrid.tsx`: draggable, resizable category workspace.
+- `src/categories/CategoryApp.tsx`: routing, navigation, search, filters, exports, and focus orchestration.
+- `docs/planning/KPI_REQUIREMENTS.tsv`: unchanged requirements archive.
+- `docs/planning/KPI_CATEGORY_IMPLEMENTATION_PLAN.md`: implementation and production evolution plan.
 
-Production can add an HTTP adapter at the source boundary and a server-backed preferences repository. The charts do not import fixture records. The KPI formulas and source mappings need airport-owner approval. Actual integration, identity, server-enforced permissions, source freshness, monitoring, and recovery remain production work; see [architecture decisions](docs/architecture.md).
+Production can add an HTTP adapter behind the existing source interface and a revision-aware server preferences repository. Formula ownership, source reconciliation, freshness, identity, permissions, observability, and operational certification remain production integration work.
 
-The exact tested dependency versions are pinned in `package.json` and `package-lock.json`.
+Dependency versions are pinned in `package.json` and `package-lock.json`.

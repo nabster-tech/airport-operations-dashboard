@@ -107,6 +107,7 @@ export function CategoryGrid({
       )}
       {mounted && width > 0 && (
         <GridLayout
+          key={bp}
           width={width}
           layout={layout}
           compactor={verticalCompactor}
@@ -218,6 +219,18 @@ export function CategoryGrid({
                                     onSelect={() => act(metric.id, 'wide')}
                                   >
                                     Full width
+                                  </Menu.Item>
+                                  <Menu.Item
+                                    className="menu-item"
+                                    onSelect={() => act(metric.id, 'taller')}
+                                  >
+                                    Taller
+                                  </Menu.Item>
+                                  <Menu.Item
+                                    className="menu-item"
+                                    onSelect={() => act(metric.id, 'shorter')}
+                                  >
+                                    Shorter
                                   </Menu.Item>
                                   <Menu.Item
                                     className="menu-item danger-item"

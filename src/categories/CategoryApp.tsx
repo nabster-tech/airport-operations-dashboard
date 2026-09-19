@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import {
@@ -25,6 +25,8 @@ import {
   type KpiId,
 } from './catalog';
 import { defaultFilters, dimensionLabels, options, type CategoryFilters } from './models';
+import { airport } from './airport';
+import { useCategoryFilterPreferences } from './filters';
 import { specs, useCategoryData } from './source';
 import { useCategoryRoute, navigate } from './navigation';
 import { useCategoryWorkspace } from './workspace';
@@ -38,11 +40,12 @@ export default function CategoryApp() {
   const { category, invalid } = useCategoryRoute();
   const presentation = usePresentation();
   const definition = categories.find((c) => c.id === category)!;
-  const [range, setRange] = useState<CategoryFilters['range']>('today');
-  const [filterMap, setFilterMap] = useState<Partial<Record<CategoryId, CategoryFilters>>>({});
-  const filters = { ...defaultFilters, ...filterMap[category], range };
+  const { filterMap, setCategoryFilters } = useCategoryFilterPreferences();
+  const filters = filterMap[category] ?? defaultFilters;
   const [mobileOpen, setMobileOpen] = useState(false),
-    [search, setSearch] = useState('');
+    [search, setSearch] = useState(''),
+    [activeSearchResult, setActiveSearchResult] = useState(0);
+  const searchResultsId = useId();
   const [focused, setFocused] = useState<{
     id: KpiId;
     category: CategoryId;
@@ -58,8 +61,8 @@ export default function CategoryApp() {
   const members = categoryEntries(category);
   const dims = [...new Set(members.flatMap((k) => specs[k.id].dimensions))];
   const selectedMetric = query.data?.metrics.find((m) => m.id === focused?.id);
-  const changeFilter = (key: keyof CategoryFilters, value: string) =>
-    setFilterMap((m) => ({ ...m, [category]: { ...filters, [key]: value } }));
+  const changeFilter = <Key extends keyof CategoryFilters>(key: Key, value: CategoryFilters[Key]) =>
+    setCategoryFilters(category, (current) => ({ ...current, [key]: value }));
   useEffect(() => {
     const changed = () => {
       setMobileOpen(false);
@@ -95,6 +98,16 @@ export default function CategoryApp() {
         (e.title + ' ' + e.category).toLowerCase().includes(search.trim().toLowerCase()),
       )
     : [];
+  const chooseSearchResult = (id: KpiId) => {
+    const result = catalog[id];
+    setSearch('');
+    setMobileOpen(false);
+    if (result.category === category) setFocused({ id, category, trigger: null });
+    else {
+      pendingFocus.current = id;
+      navigate(result.category);
+    }
+  };
   const sidebar = (
     <>
       <a
@@ -110,10 +123,10 @@ export default function CategoryApp() {
         </span>
       </a>
       <div className="airport-selector">
-        <span className="airport-code">MDI</span>
+        <span className="airport-code">{airport.code}</span>
         <div>
-          <strong>Meridian International</strong>
-          <span>Airport operations center</span>
+          <strong>{airport.name}</strong>
+          <span>{airport.operationsLabel}</span>
         </div>
         <span className="airport-status" />
       </div>
@@ -122,25 +135,55 @@ export default function CategoryApp() {
         <span className="sr-only">Find a KPI</span>
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={Boolean(search)}
+          aria-controls={searchResultsId}
+          aria-activedescendant={
+            search && searchResults[activeSearchResult]
+              ? `${searchResultsId}-${searchResults[activeSearchResult].id}`
+              : undefined
+          }
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setActiveSearchResult(0);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              setSearch('');
+              return;
+            }
+            if (!searchResults.length) return;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              event.preventDefault();
+              const direction = event.key === 'ArrowDown' ? 1 : -1;
+              setActiveSearchResult(
+                (current) => (current + direction + searchResults.length) % searchResults.length,
+              );
+            } else if (event.key === 'Enter') {
+              event.preventDefault();
+              chooseSearchResult(searchResults[activeSearchResult].id);
+            }
+          }}
           placeholder="Find a KPI"
         />
       </label>
       {search && (
-        <div className="kpi-search-results" aria-label="KPI search results">
+        <div
+          id={searchResultsId}
+          className="kpi-search-results"
+          role="listbox"
+          aria-label="KPI search results"
+        >
           {searchResults.length ? (
-            searchResults.map((k) => (
+            searchResults.map((k, index) => (
               <button
                 key={k.id}
-                onClick={() => {
-                  setSearch('');
-                  setMobileOpen(false);
-                  if (k.category === category) setFocused({ id: k.id, category, trigger: null });
-                  else {
-                    pendingFocus.current = k.id;
-                    navigate(k.category);
-                  }
-                }}
+                id={`${searchResultsId}-${k.id}`}
+                role="option"
+                aria-selected={index === activeSearchResult}
+                onMouseMove={() => setActiveSearchResult(index)}
+                onClick={() => chooseSearchResult(k.id)}
               >
                 {k.title}
                 <small>{categories.find((c) => c.id === k.category)?.label}</small>
@@ -182,7 +225,7 @@ export default function CategoryApp() {
   const exportCategory = () => {
     if (!query.data) return;
     exportRows(
-      category + '-' + range + '.csv',
+      category + '-' + filters.range + '.csv',
       [
         'Category',
         'KPI ID',
@@ -241,7 +284,7 @@ export default function CategoryApp() {
       )}
       <div className="main-shell">
         <header className="topbar">
-          <div className="flex items-center gap-3">
+          <div className="topbar-primary">
             {!desktop && (
               <button
                 className="icon-button"
@@ -252,7 +295,9 @@ export default function CategoryApp() {
               </button>
             )}
             <span className="breadcrumb">
-              KPI Categories <span>/</span> <strong>{definition.label}</strong>
+              <span className="breadcrumb-root">KPI Categories</span>
+              <span className="breadcrumb-separator">/</span>
+              <strong>{definition.label}</strong>
             </span>
           </div>
           <div className="topbar-right">
@@ -293,8 +338,8 @@ export default function CategoryApp() {
             <label>
               Time window
               <select
-                value={range}
-                onChange={(e) => setRange(e.target.value as CategoryFilters['range'])}
+                value={filters.range}
+                onChange={(e) => changeFilter('range', e.target.value as CategoryFilters['range'])}
               >
                 <option value="today">Today</option>
                 <option value="six">Last 6 hours</option>
@@ -307,7 +352,7 @@ export default function CategoryApp() {
                 <select
                   id={'filter-' + dim}
                   value={filters[dim]}
-                  onChange={(e) => changeFilter(dim, e.target.value)}
+                  onChange={(e) => changeFilter(dim, e.target.value as CategoryFilters[typeof dim])}
                 >
                   <option value="all">All {dimensionLabels[dim].toLowerCase()}s</option>
                   {options[dim].map((o) => (
@@ -322,7 +367,9 @@ export default function CategoryApp() {
               Granularity
               <select
                 value={filters.granularity}
-                onChange={(e) => changeFilter('granularity', e.target.value)}
+                onChange={(e) =>
+                  changeFilter('granularity', e.target.value as CategoryFilters['granularity'])
+                }
               >
                 <option value="quarter">15 minutes</option>
                 <option value="hour">Hourly</option>
@@ -332,8 +379,7 @@ export default function CategoryApp() {
             <button
               className="text-button"
               onClick={() => {
-                setRange('today');
-                setFilterMap((m) => ({ ...m, [category]: defaultFilters }));
+                setCategoryFilters(category, defaultFilters);
               }}
             >
               Reset filters

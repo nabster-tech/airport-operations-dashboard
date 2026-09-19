@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Clock3 } from 'lucide-react';
+import { airport, storageKeys } from './categories/airport';
 
 export type Currency = 'EUR' | 'USD' | 'INR';
 type Presentation = {
@@ -13,14 +15,17 @@ type Presentation = {
   moneyLabel: (value: number, currency?: Currency) => string;
 };
 const Context = createContext<Presentation | null>(null);
-const KEY = 'airside.presentation.v1';
+const KEY = storageKeys.presentation;
+const LEGACY_KEY = 'airside.presentation.v1';
 const rates: Record<Currency, number> = { INR: 1, EUR: 0.011, USD: 0.012 };
 export function convertCurrency(amount: number, from: Currency, to: Currency) {
   return (amount / rates[from]) * rates[to];
 }
 function readPreferences() {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    const value: unknown = JSON.parse(
+      localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY) ?? '{}',
+    );
     if (typeof value === 'object' && value !== null) {
       const saved = value as Record<string, unknown>;
       return {
@@ -36,14 +41,50 @@ function readPreferences() {
   }
   return { currency: 'EUR' as Currency, localAndUtc: false };
 }
-function clockLabel(minute: number, zone: 'airport' | 'utc') {
-  const date = new Date(Date.parse('2026-09-17T00:00:00+05:30') + minute * 60_000);
+function clockLabel(date: Date, timeZone: string) {
   return new Intl.DateTimeFormat('en-GB', {
-    timeZone: zone === 'airport' ? 'Asia/Kolkata' : 'UTC',
+    timeZone,
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
   }).format(date);
+}
+
+function calendarKey(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function dayLabel(date: Date, timeZone: string, includeYear = false) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    day: '2-digit',
+    month: 'short',
+    ...(includeYear ? { year: 'numeric' as const } : {}),
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('day')} ${value('month')}${includeYear ? ` ${value('year')}` : ''}`;
+}
+
+export function formatTimelineLabel(minute: number, localAndUtc: boolean) {
+  const date = new Date(Date.parse(airport.fixtureLocalMidnightInstant) + minute * 60_000);
+  const local = `${clockLabel(date, airport.timeZone)} ${airport.timeZoneAbbreviation}`;
+  if (!localAndUtc) return local;
+  const utcDay = dayLabel(date, 'UTC');
+  const rollover =
+    calendarKey(date, airport.timeZone) === calendarKey(date, 'UTC') ? '' : ` (${utcDay})`;
+  return `${local} · ${clockLabel(date, 'UTC')} UTC${rollover}`;
+}
+
+export function formatSnapshotLabel(localAndUtc: boolean) {
+  const date = new Date(airport.snapshotInstant);
+  const local = `${dayLabel(date, airport.timeZone, true)} · ${clockLabel(date, airport.timeZone)} ${airport.timeZoneAbbreviation}`;
+  return localAndUtc ? `${local} · ${clockLabel(date, 'UTC')} UTC` : local;
 }
 export function PresentationProvider({ children }: { children: React.ReactNode }) {
   const [prefs, setPrefs] = useState(readPreferences);
@@ -78,12 +119,8 @@ export function PresentationProvider({ children }: { children: React.ReactNode }
       setCurrency: (currency) => setPrefs((previous) => ({ ...previous, currency })),
       toggleTimeZones: () =>
         setPrefs((previous) => ({ ...previous, localAndUtc: !previous.localAndUtc })),
-      timeLabel: (minute) => {
-        const local = clockLabel(minute, 'airport') + ' IST';
-        return prefs.localAndUtc ? local + ' · ' + clockLabel(minute, 'utc') + ' UTC' : local;
-      },
-      snapshotLabel: () =>
-        prefs.localAndUtc ? '17 Sep 2026 · 14:00 IST · 08:30 UTC' : '17 Sep 2026 · 14:00 IST',
+      timeLabel: (minute) => formatTimelineLabel(minute, prefs.localAndUtc),
+      snapshotLabel: () => formatSnapshotLabel(prefs.localAndUtc),
       convertValue: (amount, unit) =>
         amount == null
           ? amount
@@ -108,14 +145,13 @@ export function usePresentation() {
   if (!value) throw new Error('PresentationProvider is missing');
   return value;
 }
-import { Clock3 } from 'lucide-react';
 export function PresentationControls() {
   const view = usePresentation();
   return (
     <div className="presentation-controls">
       <label
         className="currency-control"
-        title="Illustrative fixed demo exchange rates; source values are stored in INR."
+        title={`Illustrative fixed demo exchange rates; monetary source values use ${airport.baseCurrency}. The current KPI catalog has no monetary metrics.`}
       >
         <span className="sr-only">Display currency</span>
         <select

@@ -16,7 +16,8 @@ import {
   migrateLegacy,
   useCategoryWorkspace,
 } from '../src/categories/workspace';
-import { defaultDocument } from '../src/layout/layoutPersistence';
+import { parseCategoryFilterDocument } from '../src/categories/filters';
+import { airport } from '../src/categories/airport';
 describe('category catalog and static calculations', () => {
   it('matches all 71 source names exactly once in the 11 required categories', () => {
     const rows = readFileSync('docs/planning/KPI_REQUIREMENTS.tsv', 'utf8')
@@ -119,12 +120,32 @@ describe('category layouts', () => {
     store.cancel('passenger-flow');
   });
   it('migrates only compatible legacy preferences and leaves incompatible metrics out', () => {
-    const legacy = defaultDocument();
-    legacy.hidden = ['otp', 'baggage'];
-    legacy.settings.security = { display: 'table', density: 'comfortable' };
+    const position = (i: string) => ({ i, x: 0, y: 0, w: 3, h: 9 });
+    const legacy = {
+      layouts: {
+        desktop: [position('otp'), position('security')],
+        tablet: [position('otp'), position('security')],
+        mobile: [position('otp'), position('security')],
+      },
+      hidden: ['otp', 'baggage'],
+      settings: { security: { display: 'table', density: 'comfortable' } },
+    };
     const docs = migrateLegacy(legacy);
     expect(docs['airside-operations'].hidden).toContain('ao-otp-all');
     expect(docs['terminal-operations'].hidden).toEqual([]);
     expect(docs['passenger-flow'].tables).toContain('pf-security-wait');
+  });
+
+  it('accepts valid category filter preferences and ignores malformed categories', () => {
+    const filters = parseCategoryFilterDocument({
+      schemaVersion: 1,
+      airportId: airport.id,
+      categories: {
+        'airside-operations': { ...defaultFilters, range: 'hour' },
+        'passenger-flow': { ...defaultFilters, terminal: 'unknown' },
+      },
+    });
+    expect(filters['airside-operations']?.range).toBe('hour');
+    expect(filters['passenger-flow']).toBeUndefined();
   });
 });

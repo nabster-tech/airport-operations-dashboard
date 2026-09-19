@@ -28,7 +28,7 @@ The production build is emitted to `dist/`. Runtime data, fonts, and icons are b
 
 - All 71 KPIs from the supplied requirements, grouped into Airside Operations, Turnaround Management, Runway Operations, Apron Operations, Airside Safety, Ground Support / Resources, Weather / LVP, Operational Efficiency, Reporting & Analytics, Terminal Operations, and Passenger Flow.
 - Category routes that survive reload and browser history, plus global KPI search that opens any metric in its category.
-- Category-specific time, terminal, movement, carrier, runway, resource, and granularity filters.
+- Category-specific time, terminal, movement, carrier, runway, resource, and granularity filters that are validated and remembered in this browser.
 - Drag-to-rearrange layout editing with edge and corner resize cursors, keyboard move/size actions, full-width sizing, Save/Cancel/Reset, and Hide/Undo/Restore.
 - Independent, versioned layouts and filter memory for every category, including compatible migration from the original four KPI preferences.
 - Focus dialogs for every KPI with calculation, source, target, caveat, trend or event detail, and an accessible HTML data table.
@@ -59,15 +59,18 @@ Browser tests start a production preview on port 4173. Screenshots are generated
 ## Structure and production boundary
 
 - `src/categories/catalog.ts`: the typed 71-KPI catalog and category metadata.
+- `src/categories/airport.ts`: the single PoC airport, timezone, fixture, and preference-key configuration.
+- `src/categories/filters.ts`: validated, category-scoped filter preferences.
 - `src/categories/models.ts`: filters, metric specifications, observations, queries, and view models.
 - `src/categories/fixtures.ts`: deterministic, related airport records used by the PoC.
 - `src/categories/source.ts`: cancellable query adapter and versioned KPI calculations.
-- `src/categories/workspace.ts`: category layout, filter persistence, validation, and migration.
+- `src/categories/workspace.ts`: category layout persistence, validation, drafts, and migration.
 - `src/categories/views.tsx`: shared visualization and focus-detail families.
 - `src/categories/CategoryGrid.tsx`: draggable, resizable category workspace.
 - `src/categories/CategoryApp.tsx`: routing, navigation, search, filters, exports, and focus orchestration.
 - `docs/planning/KPI_REQUIREMENTS.tsv`: unchanged requirements archive.
 - `docs/planning/KPI_CATEGORY_IMPLEMENTATION_PLAN.md`: implementation and production evolution plan.
+- `docs/PROJECT_REVIEW_FINDINGS.md`: architecture, UI, and test review with the implemented fixes and remaining production gates.
 
 Production can add an HTTP adapter behind the existing source interface and a revision-aware server preferences repository. Formula ownership, source reconciliation, freshness, identity, permissions, observability, and operational certification remain production integration work.
 

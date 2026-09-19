@@ -10,6 +10,8 @@ Global search uses the same catalog and opens a KPI in the correct category. Unk
 
 Static fixture families model related flights, resources, stands, safety events, weather observations, passenger flows, and operational exercises. A category source resolves filters, calculates observations, and creates chart, matrix, event, report, or scenario view models. Requests accept an `AbortSignal`, and TanStack Query keys include category, filter, and definition version.
 
+`airport.ts` owns the PoC airport identity, IANA timezone, fixture timestamps, base currency, and browser preference keys. `filters.ts` validates and stores complete filter selections per category, while `workspace.ts` owns only layout documents and drafts. These are browser adapters for the PoC; production configuration and user preferences must come from authenticated services.
+
 Each KPI specification carries a provisional formula, source, target, caveat, and version. Rates derive from numerator and denominator records, weighted measures retain their sample count, and unavailable values remain distinct from zero. The UI exposes these details in every focus dialog.
 
 The source contract can be implemented by an HTTP adapter without changing category cards. Production responses must be schema-validated and reconciled against source-system totals before release.
@@ -21,6 +23,8 @@ React Grid Layout handles pointer movement, compaction, and resizing. Cards expo
 Each category has an independent draft and saved layout. Save validates and atomically writes the versioned document to localStorage. Cancel restores the saved document. Invalid storage recovers to defaults with a visible message. A conservative migration maps only the compatible OTP, turnaround, runway, and security-wait preferences from the original dashboard format.
 
 Radix dialogs and menus provide focus and keyboard behavior. Mobile navigation traps focus correctly. Every chart has an actual HTML detail table, and status is communicated with text as well as color.
+
+KPI search follows the ARIA combobox/listbox pattern, supports arrow-key selection, Enter, and Escape. On mobile, the header uses separate navigation and presentation rows with 44-pixel controls. The application shell contains transient breakpoint geometry so a grid measured at the previous desktop width cannot create horizontal page overflow.
 
 ## Production evolution
 

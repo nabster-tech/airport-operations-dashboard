@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { airport } from './airport';
 import { categoryEntries, type CategoryId, type KpiId } from './catalog';
 import {
   flights,
@@ -949,7 +950,7 @@ export const SourceContext = createContext<CategorySource>(staticSource);
 export function useCategoryData(category: CategoryId, filters: CategoryFilters) {
   const source = useContext(SourceContext);
   return useQuery({
-    queryKey: ['category', 'meridian', FIXTURE_VERSION, category, filters],
+    queryKey: ['category', airport.id, FIXTURE_VERSION, category, filters],
     queryFn: ({ signal }) => source.snapshot(category, filters, signal),
     staleTime: Infinity,
     retry: false,

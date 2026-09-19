@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { z } from 'zod';
 import { categories, categoryEntries, type CategoryId, type KpiId } from './catalog';
+import { airport, storageKeys } from './airport';
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 export interface Position {
   i: KpiId;
@@ -17,7 +18,7 @@ export interface CategoryLayout {
   hidden: KpiId[];
   tables: KpiId[];
 }
-export const STORAGE_KEY = 'airside.categories.meridian.v2';
+export const STORAGE_KEY = storageKeys.layouts;
 export const cols: Record<Breakpoint, number> = { desktop: 12, tablet: 6, mobile: 1 };
 export function pack(items: Position[], columns: number) {
   let x = 0,
@@ -153,7 +154,7 @@ function load() {
       const root = z
         .object({
           schemaVersion: z.literal(2),
-          airportId: z.literal('meridian'),
+          airportId: z.literal(airport.id),
           categories: z.record(z.string(), z.unknown()),
         })
         .parse(JSON.parse(raw));
@@ -164,7 +165,7 @@ function load() {
           notice = 'A category layout could not be read and was restored to its default.';
         }
     } else {
-      const old = localStorage.getItem('airside.workspace.meridian.v1');
+      const old = localStorage.getItem(storageKeys.legacyLayouts);
       if (old) {
         documents = migrateLegacy(JSON.parse(old));
         notice =
@@ -206,7 +207,7 @@ export const useCategoryWorkspace = create<Store>((set, get) => ({
       const documents = { ...get().documents, [id]: validate(id, draft) };
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ schemaVersion: 2, airportId: 'meridian', categories: documents }),
+        JSON.stringify({ schemaVersion: 2, airportId: airport.id, categories: documents }),
       );
       const drafts = { ...get().drafts };
       delete drafts[id];

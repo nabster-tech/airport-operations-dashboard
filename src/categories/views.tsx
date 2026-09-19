@@ -104,8 +104,8 @@ export function detailRows(
             r.id,
             presentation.timeLabel(r.minute),
             r.label,
-            presentation.convertValue(r.numerator, metric.spec.unit) ?? r.numerator,
-            presentation.convertValue(r.denominator, metric.spec.unit) ?? r.denominator,
+            r.numerator,
+            r.denominator,
             presentation.convertValue(r.reference, metric.spec.unit) ?? 'Unavailable',
             r.note ?? '',
           ] as (string | number)[],
@@ -133,8 +133,8 @@ export function detailRows(
         [
           r.label,
           presentation.convertValue(r.value, metric.spec.unit) ?? 'Unavailable',
-          presentation.convertValue(r.numerator, metric.spec.unit) ?? r.numerator,
-          presentation.convertValue(r.denominator, metric.spec.unit) ?? r.denominator,
+          r.numerator,
+          r.denominator,
           ...(metric.spec.pairLabel
             ? [presentation.convertValue(r.reference, metric.spec.unit) ?? 'Unavailable']
             : []),

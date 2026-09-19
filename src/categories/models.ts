@@ -1,4 +1,5 @@
 import type { CategoryId, KpiId } from './catalog';
+import { airport } from './airport';
 export type Dimension = 'terminal' | 'movement' | 'carrier' | 'runway' | 'resource';
 export interface CategoryFilters {
   range: 'today' | 'six' | 'hour';
@@ -18,8 +19,8 @@ export const defaultFilters: CategoryFilters = {
   resource: 'all',
   granularity: 'hour',
 };
-export const AS_OF = '2026-09-17T14:00:00+05:30';
-export const FIXTURE_VERSION = 'category-demo-v2';
+export const AS_OF = airport.snapshotInstant;
+export const FIXTURE_VERSION = airport.fixtureVersion;
 export const dimensionLabels: Record<Dimension, string> = {
   terminal: 'Terminal',
   movement: 'Movement',

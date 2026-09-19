@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convertCurrency } from '../src/presentation';
+import { convertCurrency, formatSnapshotLabel, formatTimelineLabel } from '../src/presentation';
 
 describe('fixed demonstration currency conversions', () => {
   it('converts between INR, EUR and USD using INR as the base', () => {
@@ -10,5 +10,11 @@ describe('fixed demonstration currency conversions', () => {
   });
   it('keeps the amount unchanged for the same currency', () => {
     expect(convertCurrency(1250, 'EUR', 'EUR')).toBe(1250);
+  });
+
+  it('makes UTC date rollover explicit while keeping snapshot labels configured', () => {
+    expect(formatTimelineLabel(15, true)).toBe('00:15 IST · 18:45 UTC (16 Sep)');
+    expect(formatTimelineLabel(840, true)).toBe('14:00 IST · 08:30 UTC');
+    expect(formatSnapshotLabel(true)).toBe('17 Sep 2026 · 14:00 IST · 08:30 UTC');
   });
 });

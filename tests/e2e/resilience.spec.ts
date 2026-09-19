@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { categories, categoryEntries } from '../../src/categories/catalog';
+import { storageKeys } from '../../src/categories/airport';
 test('all 71 focus views open and release size observers', async ({ page }) => {
   test.setTimeout(180_000);
   await page.addInitScript(() => {
@@ -54,29 +55,56 @@ test('responsive widths and mobile category navigation remain usable', async ({ 
   await page.goto('/');
   for (const width of [390, 768, 1440, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
+    const responsiveOverflow = await page.evaluate(async () => {
+      let largest = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+      for (let frame = 0; frame < 20; frame += 1) {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        largest = Math.max(
+          largest,
+          document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+      }
+      return largest;
+    });
     await expect(page.locator('.kpi-card')).toHaveCount(9);
+    expect(responsiveOverflow, `transient horizontal overflow at ${width}px`).toBe(0);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
       .toBeLessThanOrEqual(width);
   }
   await page.setViewportSize({ width: 390, height: 844 });
+  const mobileGeometry = await page.evaluate(() => ({
+    cardsInsideViewport: [...document.querySelectorAll('[data-widget]')].every((node) => {
+      const rectangle = node.getBoundingClientRect();
+      return rectangle.left >= 0 && rectangle.right <= document.documentElement.clientWidth;
+    }),
+    smallestTopbarControl: Math.min(
+      ...[...document.querySelectorAll('.topbar button, .topbar select')].map(
+        (node) => node.getBoundingClientRect().height,
+      ),
+    ),
+  }));
+  expect(mobileGeometry.cardsInsideViewport).toBe(true);
+  expect(mobileGeometry.smallestTopbarControl).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: 'screenshots/review-after-mobile.png', fullPage: true });
   await page.getByRole('button', { name: 'Open KPI categories' }).click();
   await page.getByRole('dialog').locator('a[href="#/kpis/airside-safety"]').click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.kpi-card')).toHaveCount(8);
-  await page.screenshot({ path: 'screenshots/categories-mobile.png', fullPage: true });
   await page.locator('.focus-button').first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 test('corrupt storage recovers and blocked saving retains the draft', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('airside.categories.meridian.v2', 'bad json');
+  await page.addInitScript((keys) => {
+    localStorage.setItem(keys.layouts, 'bad json');
+    localStorage.setItem(keys.filters, 'bad json');
     Storage.prototype.setItem = () => {
       throw new DOMException('Blocked', 'SecurityError');
     };
-  });
+  }, storageKeys);
   await page.goto('/');
   await expect(page.locator('.notice')).toContainText('could not be read');
   await expect(page.locator('.kpi-card')).toHaveCount(9);
